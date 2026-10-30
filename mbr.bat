@@ -2,28 +2,37 @@
 color 0c
 chcp 65001 > nul
 
+echo [INFO] Запуск скрипта...
 :: Проверка прав администратора
 net session >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [!] Запусти этот скрипт от имени Администратора!
-    pause
-    exit
+    echo [!] ОШИБКА: Запусти этот скрипт именно от имени Администратора!
+    goto end
 )
 
-echo ===================================================
-echo   ВНИМАНИЕ: Запись кастомного MBR в виртуальной машине!
-echo ===================================================
-set /p "choice=Прошить payload.bin в MBR и перезагрузить? (Y/N): "
+echo [INFO] Права администратора подтверждены.
+echo [INFO] Проверяем наличие файла payload.bin...
 
-if /i "%choice%"=="Y" goto flash
-if /i "%choice%"=="N" exit
-goto flash
+if not exist "payload.bin" (
+    echo [!] ОШИБКА: Файл payload.bin не найден в этой папке!
+    goto end
+)
 
-:flash
-echo Запись бинарника в MBR...
+echo [INFO] Файл payload.bin на месте. Попытка записи в MBR...
 
-:: Запись ровно 512 байт из payload.bin в PhysicalDrive0 через PowerShell
+:: Запись через PowerShell с выводом ошибок на экран
 powershell -Command "$bytes = [System.IO.File]::ReadAllBytes('payload.bin'); $stream = [io.file]::OpenWrite('\\.\PhysicalDrive0'); $stream.Write($bytes, 0, 512); $stream.Close();"
 
-echo Готово! Перезагрузка виртуальной машины...
+if %errorlevel% neq 0 (
+    echo [!] ОШИБКА: PowerShell не смог записать данные в диск!
+    goto end
+)
+
+echo [OK] Запись прошла успешно!
+echo Перезагрузка виртуальной машины...
 shutdown /r /t 0
+
+:end
+echo.
+echo Нажми любую клавишу, чтобы закрыть окно...
+pause > nul
